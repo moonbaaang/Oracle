@@ -12,6 +12,17 @@ HAVING 그룹함수조건식 연산자값
 
 ORDER BY 정렬기준 컬럼명 인덱스 별칭 ASC|DESC
 
+### 함수
+
+| 그룹     | sum avg stdev varianc --> 숫자<br/>count max min --> 숫자 문자 날짜<br/>count(*) --> null 값 포함 갯수 |
+| -------- | ------------------------------------------------------------ |
+| 타입변환 | cast (123 as date\|number\|varchar2)<br />to_char\|to_date\|to_number<br />to_char (sysdate, 'yyyy/mm/dd') |
+| 문자     | upper lower initcap<br />length<br />instr , substr          |
+| 숫자     | round trunc mod                                              |
+| 날짜     | sysdate , add_months, months_between                         |
+| NULL     | NVL(컬럼명, NULL대체값)                                      |
+| 순위     | rownum - subquery<br />row_number() over (<br />partition by 순위를 정할 그룹 or<br />order by 순위를 정할 기준 컬럼<br />)<br />rank<br />dense_rank |
+
 ### CLOB, BLOB
 
 * character | binary large object
@@ -69,7 +80,7 @@ WHERE EMPLOYEES.DEPARTMENT_ID(+) = DEPARTMENTS.DEPARTMENT_ID
 WHERE EMPLOYEES.DEPARTMENT_ID = DEPARTMENTS.DEPARTMENT_ID(+)
 ```
 
-* LONDON 도시에 근무하는 사원명, 부서명, 도시명 조회
+* 문제 ) LONDON 도시에 근무하는 사원명, 부서명, 도시명 조회
   * 사원명 = employees 테이블
   * 부서명 = departments 테이블
   * 도시명 = locations 테이블
@@ -83,8 +94,8 @@ AND UPPER(CITY)='LONDON'
 ```
 
 * 조인을 해야할 테이블이 3개면, 조건은 최소 2개
-* IT관련 부서의 사원명, 부서명, 도시명 조회
-* (IT관련부서는 부서명에 IT포함)
+* 문제 ) IT관련 부서의 사원명, 부서명, 도시명 조회
+  * (IT관련부서는 부서명에 IT포함)
 
 ```SQL
 SELECT FIRST_NAME 사원명, DEPARTMENT_NAME 부서명, CITY 도시명
@@ -94,13 +105,17 @@ AND D.LOCATION_ID = L.LOCATION_ID
 AND UPPER(DEPARTMENT_NAME) LIKE '%IT%'
 ```
 
-* 사원명 부서명 도시명 국가명 조회
+* 문제 ) 사원명 부서명 도시명 국가명 조회
 
 ```SQL
-SELECT 
+select first_name 사원명 , depart ment_name 부서명 city 도시명
+from employees e, departments d, locations l
+where e.department_id = d.department_id
+and d.location_id = l.location_id
+and UPPER(city)='LONDON'
 ```
 
-* 내 사번, 내 이름, 상사 사번, 상사 이름 조회
+* 문제 ) 내 사번, 내 이름, 상사 사번, 상사 이름 조회
 
 ```SQL
 SELECT 사번, 이름, 상사사번
@@ -111,7 +126,6 @@ SELECT ME.EMPLOYEE_ID 내사번, ME.FIRST_NAME 내이름, ME.MANAGER_ID 상사�
 FROM EMPLOYEES ME, EMPLOYEES MAN
 WHERE ME.MANAGER_ID=MAN.EMPLOYEE_ID(+)
 # 상사가 NULL > 존재 = NULL 존재 X
-
 ```
 
 * SELF INNER JOIN/ OUTER JOIN
@@ -127,8 +141,8 @@ AND ME.SALARY>MAN.SALARY;
 
 * JOIN > INNER, OUTER, CROSS, SELF JOIN
 * CROSS JOIN 
-
 * 표준JOIN - ANSI 조인
+  * select - from A inner/(left-right)outer on B
 
 ```SQL
 INNER JOIN 방법
@@ -139,15 +153,15 @@ on e.department_id = d.department_id;
 
 OUTER JOIN 방법
 select employee_id, first_name, e.department_id, department_name
-from employees e  left outer join departments d
+from employees e left outer join departments d
 on e.department_id = d.department_id;
 
 select employee_id, first_name, e.department_id, department_name
-from employees e  right outer join departments d
+from employees e right outer join departments d
 on e.department_id = d.department_id;
 
 
-SELF JOIN 방법
+SELF JOIN 방법 (같은 테이블끼리 조인)
 SELECT me.first_name 내이름, me.salary 내급여, me.manager_id 상사사번, 
 man.salary 상사급여
 FROM EMPLOYEES me inner join EMPLOYEES man
@@ -179,7 +193,6 @@ SELECT me.first_name 내이름, me.salary 내급여, me.manager_id 상사사번,
 man.salary 상사급여
 FROM EMPLOYEES me, EMPLOYEES man
 WHERE me.manager_id=man.employee_id
-
 ```
 
 * join
@@ -223,9 +236,9 @@ SELECT FIRST_NAME, DEPARTMENT_ID, SALARY
 FROM EMPLOYEES
 WHERE SALARY <= 5000;
 >> 위와 동일한 결과를 반환하나 문장이 오히려 어렵다
+>> 중복값을 제외하지 않고싶다면? (중복자 2번)
 
->> 중복값을 제외하고싶다면? (중복자 2번)
-ELECT FIRST_NAME, DEPARTMENT_ID, SALARY
+SELECT FIRST_NAME, DEPARTMENT_ID, SALARY
 FROM EMPLOYEES
 WHERE DEPARTMENT_ID = 50 
 UNION ALL
@@ -318,22 +331,25 @@ conn jdbc/jdbc
 ```sql
 CREATE TABLE EMP(
 ID NUMBER(5,0),
-NAME VARCHAR2(4000),
+NAME VARCHAR2(20),
 TITLE VARCHAR2(20),
 DEPT_ID NUMBER(5),
 SALARY NUMBER(12,2)
 );
 
-#EMP 테이블에 입사일 저장 컬럼 추가
+# ALTER TABLE
+#EMP 테이블에 입사일 저장 컬럼 추가 (ADD)
 ALTER TABLE EMP ADD INDATE DATE;
 
-#EMP 테이블에 TITLE컬럼 길이를 20 > 10자리로 변경
+#EMP 테이블에 TITLE컬럼 길이를 20 > 10자리로 변경 (MODIFY)
 ALTER TABLE EMP MODIFY TITLE VARCHAR2(10);
 단, 데이터가 20자리를 넘어가있다면 실행되지않음
 
-#EMP 테이블에서 입사일 컬럼 삭제
-ALTER TABLE EMP DROP COLUMN INDATE; > 다시 복구할수는 없다.
+#EMP 테이블에서 입사일 컬럼 삭제 (DROP)
+ALTER TABLE EMP DROP COLUMN INDATE; > 다시 복구할 수 없다.
 
+
+# INSERT INTO
 #EMP에 데이터 저장 - 수정 - 삭제
 INSERT INTO EMP VALUES(100,'이사원','사원','10',99000.5);
 INSERT INTO EMP VALUES(200,'김대리', NULL, NULL, NULL);
@@ -345,6 +361,8 @@ COMMIT;
 # emp 테이블에서 급여를 못받는 사원의 (salary=null;) 급여를 수정하는 방법
 update emp set salary=1000 where salary is null;
 
+
+# UPDATE ~ SET
 # 이름이 박대리인 사원의 부서를 이사원의 부서로 이동
 update emp 
 set DEPT_ID=(SELECT dept_id FROM EMP WHERE NAME='이사원' AND ROWNUM=1)
@@ -352,13 +370,12 @@ WHERE NAME='박대리';
 이후 COMMIT
 
 
+# DELETE
 # EMP테이블에서 ID가 100인 사원을 삭제
 DELETE EMP WHERE DEPT_ID = 10;
 
 
-insert 이후에 메모리에 임시 저장한다. db에 영구적으로 저장하거나 취소하는 sql을 실행해야한다.
-영구적으로 저장 > COMMIT > DB에 반영 > 다른 SESSION에 결과 반영
-취소 > ROLLBACK > 메모리 삭제 > 다른 SESSION에서 결과가 반영되지 않음
+
 
 INSERT INTO EMP VALUES(600, '최사장', '임원', NULL, 100000);
 ROLLBACK;
@@ -367,13 +384,18 @@ ROLLBACK;
 UPDATE EMP SET TITLE='대리' WHERE ID=200;
 ```
 
+* 작동 원리
+  * insert 명령 후 메모리에 임시 저장한다. 이후 db에 영구적으로 저장하거나 취소하는 sql을 실행해야한다.
+    * 영구적으로 저장 > COMMIT > DB에 반영 > 다른 SESSION에 결과 반영
+    * 취소 > ROLLBACK > 메모리 삭제 > 다른 SESSION에서 결과가 반영되지 않음
+
 * TCL -  TRANSACTION CONTROL LANG
 
-DDL - 자동 COMMIT - ex) 자동 commit
+* DDL - 자동 COMMIT (CREATE, ALTER, DROP)
 
 | DDL 자동 COMMIT<br />DROP TABLE EMP;                         | CREATE<br />ALTER<br />DROP    |
 | ------------------------------------------------------------ | ------------------------------ |
-| DML - COMMIT/ROLLBACK 결정<br />TRANSACTION 처리언어<br />1) COMMIT 하지 않은 상태이면 다른 세선이 처리 결과 미반영<br />2) COMMIT하면 다른 세션이 처리결과 반영<br />3) | INSERT<br />UPDATE<br />DELETE |
+| DML - COMMIT/ROLLBACK 결정<br />TRANSACTION 처리언어<br />1) COMMIT 하지 않은 상태이면 다른 세선이 처리 결과 미반영<br />2) COMMIT하면 다른 세션이 처리결과 반영<br /> | INSERT<br />UPDATE<br />DELETE |
 
 * 오라클 RUN SQL - 오라클 연결 - UPDATE 실행 (WHERE ID = 100)
 * 자바프로그램 - 오라클 연결 - UPDATE실행 (WHERE ID =100)
@@ -406,7 +428,7 @@ delete ~ where
   * DELETE 테이블명 WHERE 컬럼이름 연산자 (SUBQUERY)
 * INSERT시 SUBQUERY
   * INSERT INTO EMP VALUES(....) > 1행 삽입 (기본 형식)
-  * INSERT INTO EMP SELECT * FROM EMPLOYEES; > 테이블의 데이터 복사
+  * INSERT INTO EMP (SELECT * FROM EMPLOYEES); > 테이블의 데이터 복사
     * EMP에 들어가있는 컬럼 갯수, 컬럼 타입 / EMPLOYEES 에 들어가있는 컬럼갯수, 컬럼타입 확인해야한다.
     * 따라서 이러한 식으로 이용한다.
 
@@ -424,7 +446,7 @@ select * from hr.employees;
 ```
 
 * CREATE
-  * CREATE TABLE EMP(컬럼1, 타입(길이), ...)
+  * CREATE TABLE EMP(컬럼1, 타입(길이), ...)0
   * EMPLOYEES 테이블 처럼 11개 컬럼, 이름, 타입, 자리, 데이터까지 그대로 복사할 것이면?
 
 ```SQL
@@ -449,12 +471,8 @@ INSERT INTO EMP VALUES(???,'김대리', NULL, NULL, NULL);
 1. 시퀀스를 생성한다
 
 ```SQL
-CREATE SEQUENCE 시퀀스이름 >> 1부터 시작, 1씩 증가, MAX값 까지 증가
-CREATE SEQUENCE 시퀀스이름(
-START WITH 10,
-INCREMENT BY 5,
-MAXVALUE 100
-)
+CREATE SEQUENCE 시퀀스이름 >> 10부터 시작, 1씩 증가, MAX값 100까지 증가
+CREATE SEQUENCE 시퀀스이름 START WITH 10 INCREMENT BY 5 MAXVALUE 100
 ```
 
 2. 시퀀스를 활용한다.
@@ -464,9 +482,8 @@ MAXVALUE 100
 시퀀스명.NEXTVAL >> 1, 2, 3씩 증가 (설정값에 따라 다름)
 
 값을 확인할 때는 DUAL 사용
+select 시퀀스명.CURRVAL/NEXTVAL FROM DUAL;
 ```
-
-
 
 3. 수정이나 삭제한다.
 
@@ -502,14 +519,14 @@ INSERT INTO EMP VALUES(EMP_SEQ.NEXTVAL, '이자바', '사원', 30, 45000,55);
 > Constraint
 
 * 제약조건 = 현실세계 모델링 = 테이블 데이터 모순이 없어야한다. (무결성)
-
 * 제약조건 타입
-* 중복 X >> unique
-* null 값 허용 X >> not null
 
-* 중복 X + null X >> primary key
-* 다른 테이블 포함 값 사용 가능 >> foreign key
-* 사용자 조건 등 >> check
+| 중복 X                        | unique      |
+| ----------------------------- | ----------- |
+| Null값 허용 X                 | not null    |
+| 중복 X + Null값 허용 X        | primary key |
+| 다른 테이블 포함 값 사용 가능 | foreign key |
+| 사용자 조건                   | check       |
 
 * 예시
 
@@ -542,7 +559,7 @@ salary number(12, 2) constraint c_emp_salary_ck check (salary>=1000),
 dept_id number(5) constraint c_emp_dept_id_fk references c_dept(dept_id)
 );
 
->> 제약조건 정의는 위와같이 DDL에서 진행
+>> 제약조건 정의는 위와같이 DDL에서 진행 > CREATE, ALTER
 >> 제약조건에 효력이 발생하는 때 > insert, update, delete (dml)
 
 
