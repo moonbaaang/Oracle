@@ -602,3 +602,40 @@ RENAME 이전테이블명 TO 새로운테이블명;
 
 * JAVA - ORACLE 연동 과정
 * 아이디입력 - XXXX > DB C_EMP저장(SQL) > DB전송 > 오라클 DTO, DAO
+
+```sql
+select * from user_constraints;
+# 오라클 딕셔너리
+```
+
+* 제약조건을 보여준다.
+
+```sql
+select constraint_name, constraint_type, search_condition, table_name 
+from user_constraints
+where LOWER(table_name)='c_emp'
+
+
+CONSTRAINT_NAME                                              CO SEARCH_CONDITION
+------------------------------------------------------------ -- --------------------------------------------------------------------------------
+TABLE_NAME
+------------------------------------------------------------
+C_EMP_DEPT_ID_FK                                             R
+C_EMP
+
+C_EMP_SALARY_CK                                              C  salary>=1000
+C_EMP
+
+C_EMP_TITLE_CK                                               C  title in ('사원','대리','과장','부장','임원','사장')
+C_EMP
+
+C_EMP_EMP_NAME_NN                                            C  "EMP_NAME" IS NOT NULL
+C_EMP
+
+C_EMP_EMP_ID_PK                                              P
+C_EMP
+```
+
+* R - foreign key
+* P - primary key
+* C - check type (부가 설명 추가)
